@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import CCD File - Mya View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --sage: #6B8E77;
+            --warm-white: #FBF9F7;
+            --charcoal: #2F2F2F;
+            --soft-gray: #E8E5E1;
+            --accent: #9CB4A3;
+            --coral: #E07A5F;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--warm-white);
+            color: var(--charcoal);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--sage);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--charcoal);
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 6px var(--shadow);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-section.hidden {
+            display: none;
+        }
+
+        .upload-dropzone {
+            border: 3px dashed var(--sage);
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-dropzone:hover {
+            background: var(--soft-gray);
+            border-color: var(--accent);
+        }
+
+        .upload-dropzone.drag-over {
+            background: var(--accent);
+            border-color: var(--sage);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--sage);
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: var(--charcoal);
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Family Member Select */
+        .member-select-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .member-select-section label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--sage);
+        }
+
+        .member-select-section select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--soft-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            display: none;
+        }
+
+        .preview-section.visible {
+            display: block;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px var(--shadow);
+            text-align: center;
+        }
+
+        .summary-card .count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--sage);
+        }
+
+        .summary-card .label {
+            color: var(--charcoal);
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+
+        .data-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .data-section h2 {
+            color: var(--sage);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .select-all {
+            font-size: 0.9rem;
+            color: var(--sage);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .items-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .item-card {
+            border: 2px solid var(--soft-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+        }
+
+        .item-card.selected {
+            border-color: var(--sage);
+            background: rgba(107, 142, 119, 0.05);
+        }
+
+        .item-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 0.25rem;
+        }
+
+        .item-details {
+            font-size: 0.9rem;
+            color: var(--charcoal);
+            opacity: 0.7;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .item-meta span {
+            background: var(--soft-gray);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--sage);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a7a65;
+        }
+
+        .btn-primary:disabled {
+            background: var(--soft-gray);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--sage);
+            border: 2px solid var(--sage);
+        }
+
+        .btn-secondary:hover {
+            background: var(--soft-gray);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--soft-gray);
+            border-top: 4px solid var(--sage);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .success-message.visible {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--sage);
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            background: var(--coral);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .nav-link {
+            color: var(--sage);
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Import Health Records</h1>
+            <p>Upload your CCD (Continuity of Care Document) from your healthcare provider and review before importing</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-dropzone" id="dropzone">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drag and drop your CCD file here</div>
+                <div class="upload-hint">or click to browse (XML, CCD, CCDA files only)</div>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".xml,.ccd,.ccda">
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Parsing your health records...</div>
+        </div>
+
+        <!-- Family Member Selection -->
+        <div class="member-select-section" id="memberSection" style="display: none;">
+            <label for="familyMember">Import records for:</label>
+            <select id="familyMember">
+                <option value="">Select a family member...</option>
+            </select>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section" id="previewSection">
+            <div class="summary-cards" id="summaryCards"></div>
+
+            <!-- Demographics -->
+            <div class="data-section" id="demographicsSection" style="display: none;">
+                <h2>📋 Patient Demographics</h2>
+                <div id="demographicsContent"></div>
+            </div>
+
+            <!-- Medications -->
+            <div class="data-section" id="medicationsSection" style="display: none;">
+                <div class="section-header">
+                    <h2>💊 Medications</h2>
+                    <span class="select-all" onclick="toggleSelectAll('medications')">Select All</span>
+                </div>
+                <div class="items-list" id="medicationsList"></div>
+            </div>
+
+            <!-- Allergies -->
+            <div class="data-section" id="allergiesSection" style="display: none;">
+                <div class="section-header">
+                    <h2>⚠️ Allergies</h2>
+                    <span class="select-all" onclick="toggleSelectAll('allergies')">Select All</span>
+                </div>
+                <div class="items-list" id="allergiesList"></div>
+            </div>
+
+            <!-- Problems/Conditions -->
+            <div class="data-section" id="problemsSection" style="display: none;">
+                <div class="section-header">
+                    <h2>🩺 Conditions</h2>
+                    <span class="select-all" onclick="toggleSelectAll('problems')">Select All</span>
+                </div>
+                <div class="items-list" id="problemsList"></div>
+            </div>
+
+            <!-- Procedures -->
+            <div class="data-section" id="proceduresSection" style="display: none;">
+                <div class="section-header">
+                    <h2>🏥 Procedures</h2>
+                    <span class="select-all" onclick="toggleSelectAll('procedures')">Select All</span>
+                </div>
+                <div class="items-list" id="proceduresList"></div>
+            </div>
+
+            <!-- Lab Results -->
+            <div class="data-section" id="labResultsSection" style="display: none;">
+                <div class="section-header">
+                    <h2>🔬 Lab Results</h2>
+                    <span class="select-all" onclick="toggleSelectAll('lab_results')">Select All</span>
+                </div>
+                <div class="items-list" id="labResultsList"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="resetUpload()">Cancel</button>
+                <button class="btn btn-primary" id="importBtn" onclick="importSelected()">Import Selected Items</button>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <div class="success-icon">✅</div>
+            <h2>Import Successful!</h2>
+            <p id="successDetails"></p>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="location.href='/'">Go to Chat</button>
+                <button class="btn btn-secondary" onclick="location.href='/timeline'">View Timeline</button>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="nav-link">← Back to Home</a>
+            <a href="/timeline" class="nav-link">View Timeline</a>
+        </div>
+    </div>
+
+    <script>
+        let uploadId = null;
+        let previewData = null;
+        const API_BASE = window.location.origin;
+
+        // File upload handling
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFileUpload(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFileUpload(file);
+        });
+
+        async function handleFileUpload(file) {
+            // Validate file type
+            if (!file.name.toLowerCase().match(/\.(xml|ccd|ccda)$/)) {
+                showError('Please upload a valid CCD/C-CDA XML file');
+                return;
+            }
+
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('loading').classList.add('visible');
+            hideError();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_BASE}/api/ccd/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+
+                previewData = await response.json();
+                uploadId = previewData.upload_id;
+
+                document.getElementById('loading').classList.remove('visible');
+                await loadFamilyMembers();
+                document.getElementById('memberSection').style.display = 'block';
+                displayPreview();
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showError(error.message);
+                document.getElementById('loading').classList.remove('visible');
+                document.getElementById('uploadSection').classList.remove('hidden');
+            }
+        }
+
+        async function loadFamilyMembers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/family/members`);
+                const members = await response.json();
+
+                const select = document.getElementById('familyMember');
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.preferred_name || member.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load family members:', error);
+            }
+        }
+
+        function displayPreview() {
+            document.getElementById('previewSection').classList.add('visible');
+
+            // Summary cards
+            const summaryCards = document.getElementById('summaryCards');
+            summaryCards.innerHTML = Object.entries(previewData.summary)
+                .map(([key, count]) => `
+                    <div class="summary-card">
+                        <div class="count">${count}</div>
+                        <div class="label">${formatLabel(key)}</div>
+                    </div>
+                `).join('');
+
+            // Demographics
+            if (previewData.demographics) {
+                document.getElementById('demographicsSection').style.display = 'block';
+                const demo = previewData.demographics;
+                document.getElementById('demographicsContent').innerHTML = `
+                    <div class="item-details">
+                        <strong>Name:</strong> ${demo.full_name || 'N/A'}<br>
+                        <strong>Birth Date:</strong> ${demo.birth_date || 'N/A'}<br>
+                        <strong>Gender:</strong> ${demo.gender || 'N/A'}<br>
+                        ${demo.address ? `<strong>Address:</strong> ${demo.address}<br>` : ''}
+                    </div>
+                `;
+            }
+
+            // Render each section
+            renderSection('medications', previewData.medications);
+            renderSection('allergies', previewData.allergies);
+            renderSection('problems', previewData.problems);
+            renderSection('procedures', previewData.procedures);
+            renderSection('lab_results', previewData.lab_results);
+        }
+
+        function renderSection(sectionName, items) {
+            if (!items || items.length === 0) return;
+
+            const section = document.getElementById(`${sectionName}Section`);
+            const list = document.getElementById(`${sectionName}List`);
+
+            section.style.display = 'block';
+            list.innerHTML = items.map((item, index) => renderItem(sectionName, item, index)).join('');
+
+            // Select all by default
+            items.forEach((_, index) => {
+                const checkbox = document.getElementById(`${sectionName}-${index}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        function renderItem(sectionName, item, index) {
+            switch(sectionName) {
+                case 'medications':
+                    return `
+                        <div class="item-card selected" onclick="toggleItem(this, '${sectionName}-${index}')">
+                            <input type="checkbox" class="item-checkbox" id="${sectionName}-${index}" checked>
+                            <div class="item-content">
+                                <div class="item-title">${item.name}</div>
+                                <div class="item-details">${item.dosage || ''} ${item.frequency || ''}</div>
+                                <div class="item-meta">
+                                    ${item.start_date ? `<span>Started: ${item.start_date}</span>` : ''}
+                                    ${item.status ? `<span>Status: ${item.status}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'allergies':
+                    return `
+                        <div class="item-card selected" onclick="toggleItem(this, '${sectionName}-${index}')">
+                            <input type="checkbox" class="item-checkbox" id="${sectionName}-${index}" checked>
+                            <div class="item-content">
+                                <div class="item-title">${item.allergen}</div>
+                                <div class="item-details">${item.reaction || 'No reaction recorded'}</div>
+                                ${item.severity ? `<div class="item-meta"><span>Severity: ${item.severity}</span></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                case 'problems':
+                    return `
+                        <div class="item-card selected" onclick="toggleItem(this, '${sectionName}-${index}')">
+                            <input type="checkbox" class="item-checkbox" id="${sectionName}-${index}" checked>
+                            <div class="item-content">
+                                <div class="item-title">${item.name}</div>
+                                <div class="item-meta">
+                                    ${item.diagnosed_date ? `<span>Diagnosed: ${item.diagnosed_date}</span>` : ''}
+                                    ${item.icd10_code ? `<span>ICD-10: ${item.icd10_code}</span>` : ''}
+                                    ${item.status ? `<span>${item.status}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'procedures':
+                    return `
+                        <div class="item-card selected" onclick="toggleItem(this, '${sectionName}-${index}')">
+                            <input type="checkbox" class="item-checkbox" id="${sectionName}-${index}" checked>
+                            <div class="item-content">
+                                <div class="item-title">${item.name}</div>
+                                <div class="item-meta">
+                                    ${item.date ? `<span>Date: ${item.date}</span>` : ''}
+                                    ${item.cpt_code ? `<span>CPT: ${item.cpt_code}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'lab_results':
+                    const resultsText = item.results.map(r => `${r.test}: ${r.value} ${r.unit || ''}`).join(', ');
+                    return `
+                        <div class="item-card selected" onclick="toggleItem(this, '${sectionName}-${index}')">
+                            <input type="checkbox" class="item-checkbox" id="${sectionName}-${index}" checked>
+                            <div class="item-content">
+                                <div class="item-title">${item.panel}</div>
+                                <div class="item-details">${resultsText}</div>
+                                ${item.date ? `<div class="item-meta"><span>Date: ${item.date}</span></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+            }
+        }
+
+        function toggleItem(card, checkboxId) {
+            const checkbox = document.getElementById(checkboxId);
+            checkbox.checked = !checkbox.checked;
+            card.classList.toggle('selected', checkbox.checked);
+        }
+
+        function toggleSelectAll(sectionName) {
+            const list = document.getElementById(`${sectionName}List`);
+            const checkboxes = list.querySelectorAll('.item-checkbox');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.checked = !allChecked;
+                const card = checkbox.closest('.item-card');
+                card.classList.toggle('selected', !allChecked);
+            });
+        }
+
+        async function importSelected() {
+            const familyMemberId = document.getElementById('familyMember').value;
+            if (!familyMemberId) {
+                showError('Please select a family member');
+                return;
+            }
+
+            // Collect selected items
+            const selectedSections = [];
+            const selectedItems = {};
+
+            ['medications', 'allergies', 'problems', 'procedures', 'lab_results'].forEach(section => {
+                const checkboxes = document.querySelectorAll(`#${section}List .item-checkbox`);
+                const selected = Array.from(checkboxes)
+                    .map((cb, idx) => cb.checked ? idx : null)
+                    .filter(idx => idx !== null);
+
+                if (selected.length > 0) {
+                    selectedSections.push(section);
+                    selectedItems[section] = selected;
+                }
+            });
+
+            if (selectedSections.length === 0) {
+                showError('Please select at least one item to import');
+                return;
+            }
+
+            document.getElementById('importBtn').disabled = true;
+            document.getElementById('loading').classList.add('visible');
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/ccd/import`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        upload_id: uploadId,
+                        family_member_id: familyMemberId,
+                        selected_sections: selectedSections,
+                        selected_items: selectedItems
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Import failed');
+                }
+
+                const result = await response.json();
+
+                document.getElementById('loading').classList.remove('visible');
+                document.getElementById('previewSection').classList.remove('visible');
+                document.getElementById('memberSection').style.display = 'none';
+
+                const details = Object.entries(result.imported_counts)
+                    .map(([k, v]) => `${v} ${formatLabel(k)}`)
+                    .join(', ');
+
+                document.getElementById('successDetails').textContent = `Successfully imported: ${details}`;
+                document.getElementById('successMessage').classList.add('visible');
+
+            } catch (error) {
+                console.error('Import error:', error);
+                showError(error.message);
+                document.getElementById('loading').classList.remove('visible');
+                document.getElementById('importBtn').disabled = false;
+            }
+        }
+
+        function resetUpload() {
+            location.reload();
+        }
+
+        function formatLabel(key) {
+            return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('visible');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('visible');
+        }
+    </script>
+</body>
+</html>

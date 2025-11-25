@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mya View - Health Timeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FAF9F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F5F3F0;
+            --text-primary: #2D3142;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --accent: #5B8A72;
+            --accent-light: #E8F2ED;
+            --accent-hover: #4A7461;
+            --accent-warm: #D4A574;
+            --success: #5B8A72;
+            --warning: #E9B872;
+            --error: #C97064;
+            --border: #E8E6E3;
+            --border-light: #F0EEEB;
+            --shadow-soft: 0 2px 8px rgba(45, 49, 66, 0.06);
+            --shadow-medium: 0 4px 20px rgba(45, 49, 66, 0.08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --transition-gentle: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Event type colors */
+            --event-lab: #7BA3D4;
+            --event-appointment: #8AC4B8;
+            --event-condition: #E9B872;
+            --event-medication: #9B8AC4;
+            --event-procedure: #C97064;
+            --event-genetic: #D4A574;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1C1E26;
+            --bg-secondary: #252830;
+            --bg-tertiary: #2D3142;
+            --text-primary: #F5F4F2;
+            --text-secondary: #A8A9AD;
+            --text-muted: #6B7280;
+            --accent: #7BA896;
+            --accent-light: rgba(123, 168, 150, 0.15);
+            --accent-hover: #8FBAA8;
+            --border: #3D4152;
+            --border-light: #353845;
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px 0;
+            margin-bottom: 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-mark {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        select, input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color var(--transition-gentle);
+        }
+
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1.5px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            user-select: none;
+        }
+
+        .chip:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .chip.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Timeline */
+        .timeline-container {
+            position: relative;
+            padding-left: 48px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-event {
+            position: relative;
+            margin-bottom: 32px;
+            padding-left: 32px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -36px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-secondary);
+            box-shadow: var(--shadow-soft);
+            z-index: 2;
+        }
+
+        .timeline-marker.lab_event { background: var(--event-lab); }
+        .timeline-marker.appointment { background: var(--event-appointment); }
+        .timeline-marker.condition { background: var(--event-condition); }
+        .timeline-marker.medication_start, .timeline-marker.medication_stop { background: var(--event-medication); }
+        .timeline-marker.procedure { background: var(--event-procedure); }
+        .timeline-marker.genetic_test { background: var(--event-genetic); }
+
+        .event-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: all var(--transition-gentle);
+            cursor: pointer;
+        }
+
+        .event-card:hover {
+            box-shadow: var(--shadow-medium);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .event-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .event-type-badge.lab_event { background: var(--event-lab); color: white; }
+        .event-type-badge.appointment { background: var(--event-appointment); color: white; }
+        .event-type-badge.condition { background: var(--event-condition); color: white; }
+        .event-type-badge.medication_start, .event-type-badge.medication_stop { background: var(--event-medication); color: white; }
+        .event-type-badge.procedure { background: var(--event-procedure); color: white; }
+        .event-type-badge.genetic_test { background: var(--event-genetic); color: white; }
+
+        .event-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .event-metadata {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-light);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all var(--transition-gentle);
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* Nav links */
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--transition-gentle);
+        }
+
+        .nav-link:hover {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* Export/Print buttons */
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition-gentle);
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            .header, .controls, .stats, .action-btn, .theme-toggle, .nav-links {
+                display: none !important;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .timeline-container {
+                padding-left: 20px;
+            }
+
+            .event-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+                margin-bottom: 16px;
+            }
+
+            .timeline-line {
+                background: #ddd;
+            }
+
+            .timeline-marker {
+                border-color: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <a href="/" class="logo">
+                    <div class="logo-mark">M</div>
+                    <span class="logo-text">Mya View</span>
+                </a>
+                <div>
+                    <h1>Health Timeline</h1>
+                    <div class="subtitle" id="member-name">Loading...</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div class="nav-links">
+                    <a href="/" class="nav-link">Chat</a>
+                    <a href="/graph" class="nav-link">Graph</a>
+                    <a href="/timeline" class="nav-link active">Timeline</a>
+                </div>
+                <button class="action-btn" onclick="exportCSV()" title="Export to CSV">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Export</span>
+                </button>
+                <button class="action-btn" onclick="window.print()" title="Print timeline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span>Print</span>
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <label>Family Member</label>
+                <select id="member-select">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Start Date</label>
+                <input type="date" id="start-date">
+            </div>
+
+            <div class="control-group">
+                <label>End Date</label>
+                <input type="date" id="end-date">
+            </div>
+
+            <div class="control-group" style="flex: 1;">
+                <label>Event Types</label>
+                <div class="filter-chips">
+                    <div class="chip active" data-type="all">All</div>
+                    <div class="chip" data-type="lab_event">Labs</div>
+                    <div class="chip" data-type="appointment">Appointments</div>
+                    <div class="chip" data-type="condition">Conditions</div>
+                    <div class="chip" data-type="medication_start">Medications</div>
+                    <div class="chip" data-type="procedure">Procedures</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats" id="stats-container">
+            <!-- Stats will be inserted here -->
+        </div>
+
+        <!-- Timeline -->
+        <div id="timeline-content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading your health timeline...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentMemberId = localStorage.getItem('selectedMemberId') || 'collin-paran-001';
+        let selectedEventTypes = ['all'];
+        let timelineData = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFamilyMembers();
+            loadTimeline();
+            setupEventListeners();
+            updateThemeIcon();
+        });
+
+        // Load family members
+        async function loadFamilyMembers() {
+            try {
+                // For now, use a default member
+                // TODO: Fetch from /api/family endpoint
+                const select = document.getElementById('member-select');
+                select.innerHTML = '<option value="collin-paran-001">Collin Paran</option>';
+                select.value = currentMemberId;
+            } catch (error) {
+                console.error('Failed to load family members:', error);
+            }
+        }
+
+        // Load timeline
+        async function loadTimeline() {
+            try {
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+
+                let url = `/api/timeline/${currentMemberId}`;
+                const params = new URLSearchParams();
+
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+
+                if (selectedEventTypes.length > 0 && !selectedEventTypes.includes('all')) {
+                    params.append('event_types', selectedEventTypes.join(','));
+                }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load timeline');
+
+                timelineData = await response.json();
+                renderTimeline(timelineData);
+                loadStats();
+            } catch (error) {
+                console.error('Failed to load timeline:', error);
+                document.getElementById('timeline-content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Failed to load timeline</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`/api/timeline/${currentMemberId}/stats`);
+                const stats = await response.json();
+
+                const container = document.getElementById('stats-container');
+                container.innerHTML = `
+                    <div class="stat-card">
+                        <div class="label">Total Events</div>
+                        <div class="value">${stats.total_events}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Lab Events</div>
+                        <div class="value">${stats.event_counts.lab_events || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Appointments</div>
+                        <div class="value">${stats.event_counts.appointments || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Conditions</div>
+                        <div class="value">${stats.event_counts.conditions || 0}</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Render timeline
+        function renderTimeline(data) {
+            const container = document.getElementById('timeline-content');
+            const memberName = document.getElementById('member-name');
+
+            memberName.textContent = data.family_member_name;
+
+            if (data.events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <h3>No events found</h3>
+                        <p>No health events in the selected time range</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const eventsHTML = data.events.map(event => {
+                const date = new Date(event.date);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                const eventTypeName = event.event_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                let metadataHTML = '';
+                if (event.metadata && Object.keys(event.metadata).length > 0) {
+                    const metadataItems = Object.entries(event.metadata)
+                        .filter(([key, value]) => value && key !== 'summary')
+                        .map(([key, value]) => {
+                            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            return `<span><strong>${label}:</strong> ${value}</span>`;
+                        })
+                        .join(' • ');
+
+                    if (metadataItems) {
+                        metadataHTML = `<div class="event-metadata">${metadataItems}</div>`;
+                    }
+                }
+
+                return `
+                    <div class="timeline-event">
+                        <div class="timeline-marker ${event.event_type}"></div>
+                        <div class="event-card">
+                            <div class="event-type-badge ${event.event_type}">${eventTypeName}</div>
+                            <div class="event-header">
+                                <div class="event-title">${event.title}</div>
+                                <div class="event-date">${formattedDate}</div>
+                            </div>
+                            ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                            ${metadataHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="timeline-container">
+                    <div class="timeline-line"></div>
+                    ${eventsHTML}
+                </div>
+            `;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Member select
+            document.getElementById('member-select').addEventListener('change', (e) => {
+                currentMemberId = e.target.value;
+                localStorage.setItem('selectedMemberId', currentMemberId);
+                loadTimeline();
+            });
+
+            // Date filters
+            document.getElementById('start-date').addEventListener('change', loadTimeline);
+            document.getElementById('end-date').addEventListener('change', loadTimeline);
+
+            // Event type chips
+            document.querySelectorAll('.chip[data-type]').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const type = chip.dataset.type;
+
+                    if (type === 'all') {
+                        selectedEventTypes = ['all'];
+                        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                    } else {
+                        // Remove 'all' if selecting specific type
+                        selectedEventTypes = selectedEventTypes.filter(t => t !== 'all');
+
+                        if (chip.classList.contains('active')) {
+                            chip.classList.remove('active');
+                            selectedEventTypes = selectedEventTypes.filter(t => t !== type);
+
+                            // If nothing selected, select all
+                            if (selectedEventTypes.length === 0) {
+                                selectedEventTypes = ['all'];
+                                document.querySelector('.chip[data-type="all"]').classList.add('active');
+                            }
+                        } else {
+                            chip.classList.add('active');
+                            selectedEventTypes.push(type);
+                            document.querySelector('.chip[data-type="all"]').classList.remove('active');
+                        }
+                    }
+
+                    loadTimeline();
+                });
+            });
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const theme = document.documentElement.getAttribute('data-theme') || 'light';
+            document.querySelector('.theme-icon').textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+
+        // Export to CSV
+        function exportCSV() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            let url = `/api/timeline/${currentMemberId}/export/csv`;
+            const params = new URLSearchParams();
+
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            if (selectedEventTypes.length > 0 && !selectedEventTypes.includes('all')) {
+                params.append('event_types', selectedEventTypes.join(','));
+            }
+
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+
+            // Trigger download
+            window.location.href = url;
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+# Environment
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Data directories (contain personal medical data - PII/PHI)
+data/uploads/
+data/checkpoints/
+data/neo4j/
+data/postgres/
+data/backups/
+training/datasets/family/
+
+# Medical documents (PDFs, images with PHI)
+*.pdf
+!docs/*.pdf
+
+# Model files (large)
+data/models/
+training/adapters/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/

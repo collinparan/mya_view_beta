@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mya View - Graph Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FAF9F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F5F3F0;
+            --text-primary: #2D3142;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --accent: #5B8A72;
+            --accent-light: #E8F2ED;
+            --accent-hover: #4A7461;
+            --accent-warm: #D4A574;
+            --success: #5B8A72;
+            --warning: #E9B872;
+            --error: #C97064;
+            --border: #E8E6E3;
+            --border-light: #F0EEEB;
+            --shadow-soft: 0 2px 8px rgba(45, 49, 66, 0.06);
+            --shadow-medium: 0 4px 20px rgba(45, 49, 66, 0.08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --transition-gentle: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Node colors */
+            --node-person: #5B8A72;
+            --node-condition: #E9B872;
+            --node-medication: #7BA3D4;
+            --node-allergen: #C97064;
+            --node-document: #9B8AC4;
+            --node-alias: #8AC4B8;
+            --node-default: #9CA3AF;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1C1E26;
+            --bg-secondary: #252830;
+            --bg-tertiary: #2D3142;
+            --text-primary: #F5F4F2;
+            --text-secondary: #A8A9AD;
+            --text-muted: #6B7280;
+            --accent: #7BA896;
+            --accent-light: rgba(123, 168, 150, 0.15);
+            --accent-hover: #8FBAA8;
+            --border: #3D4152;
+            --border-light: #353845;
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr 360px;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-warm) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-mark svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-text span { color: var(--accent-warm); }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            margin-left: 20px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition-gentle);
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link.active {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .spacer { flex: 1; }
+
+        .header-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Sidebar - Query Panel */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-header svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+        }
+
+        .query-section {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .query-textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            resize: vertical;
+            outline: none;
+            transition: var(--transition-gentle);
+        }
+
+        .query-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .query-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-gentle);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .query-templates {
+            margin-top: 20px;
+        }
+
+        .template-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .template-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: left;
+            cursor: pointer;
+            transition: var(--transition-gentle);
+        }
+
+        .template-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Main Graph Area */
+        .graph-area {
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #graphCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+
+        .graph-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .graph-control-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-gentle);
+        }
+
+        .graph-control-btn:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .graph-control-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-soft);
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            margin: 0 -8px 4px -8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition-gentle);
+        }
+
+        .legend-item:hover {
+            background: var(--accent-light);
+        }
+
+        .legend-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .legend-item:last-child { margin-bottom: 0; }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-clear {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .legend-clear:hover {
+            color: var(--accent);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .results-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .result-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .result-item {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition-gentle);
+        }
+
+        .result-item:hover {
+            background: var(--accent-light);
+        }
+
+        .result-item.selected {
+            border: 2px solid var(--accent);
+        }
+
+        .result-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .result-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .result-props {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Node Detail Modal */
+        .node-detail {
+            padding: 16px;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-tertiary);
+            max-height: 40%;
+            overflow-y: auto;
+        }
+
+        .node-detail h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-section {
+            margin-bottom: 16px;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .property-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+        }
+
+        .property-key {
+            color: var(--text-secondary);
+        }
+
+        .property-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .connection-arrow {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Loading & Empty States */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 280px 1fr 300px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+            }
+
+            .sidebar, .results-panel {
+                border: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+
+            .graph-area {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="/" class="logo">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </div>
+                <span class="logo-text">Mya <span>View</span></span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="/" class="nav-link">Chat</a>
+                <a href="/voice" class="nav-link">Voice</a>
+                <a href="/camera" class="nav-link">Stream</a>
+                <a href="/graph" class="nav-link active">Graph</a>
+                <a href="/timeline" class="nav-link">Timeline</a>
+                <a href="/settings" class="nav-link">Settings</a>
+            </nav>
+
+            <div class="spacer"></div>
+
+            <div class="header-stats">
+                <div class="stat">
+                    <span>Nodes:</span>
+                    <span class="stat-value" id="totalNodes">-</span>
+                </div>
+                <div class="stat">
+                    <span>Relationships:</span>
+                    <span class="stat-value" id="totalRels">-</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Query Sidebar -->
+        <aside class="sidebar">
+            <div class="panel-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                Cypher Query
+            </div>
+            <div class="query-section">
+                <textarea
+                    class="query-textarea"
+                    id="queryInput"
+                    placeholder="MATCH (n) RETURN n LIMIT 25"
+                >MATCH (n) RETURN n LIMIT 50</textarea>
+
+                <div class="query-actions">
+                    <button class="btn btn-primary" id="runQueryBtn">Run Query</button>
+                    <button class="btn btn-secondary" id="refreshBtn" title="Refresh graph">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="query-templates">
+                    <div class="template-label">Quick Queries</div>
+                    <button class="template-btn" data-query="MATCH (p:Person) RETURN p">All People</button>
+                    <button class="template-btn" data-query="MATCH (p:Person)-[r]->(c) RETURN p, r, c LIMIT 50">People & Connections</button>
+                    <button class="template-btn" data-query="MATCH (p:Person)-[:HAS_CONDITION]->(c:Condition) RETURN p.name as Person, c.name as Condition">Conditions by Person</button>
+                    <button class="template-btn" data-query="MATCH (p:Person)-[:TAKES]->(m:Medication) RETURN p.name as Person, m.name as Medication">Medications by Person</button>
+                    <button class="template-btn" data-query="MATCH (p:Person)-[:ALLERGIC_TO]->(a:Allergen) RETURN p.name as Person, a.name as Allergen, a.reaction as Reaction">Allergies</button>
+                    <button class="template-btn" data-query="MATCH (p:Person)-[:HAS_ALIAS]->(a:Alias) RETURN p.name as Person, a.name as Alias">Name Aliases</button>
+                    <button class="template-btn" data-query="MATCH path = (a)-[*1..3]-(b) WHERE a <> b RETURN path LIMIT 30">Relationship Paths</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Graph Visualization -->
+        <main class="graph-area">
+            <canvas id="graphCanvas"></canvas>
+
+            <div class="legend" id="legend">
+                <div class="legend-item" data-label="Person">
+                    <div class="legend-dot" style="background: var(--node-person)"></div>
+                    <span>Person</span>
+                </div>
+                <div class="legend-item" data-label="Condition">
+                    <div class="legend-dot" style="background: var(--node-condition)"></div>
+                    <span>Condition</span>
+                </div>
+                <div class="legend-item" data-label="Medication">
+                    <div class="legend-dot" style="background: var(--node-medication)"></div>
+                    <span>Medication</span>
+                </div>
+                <div class="legend-item" data-label="Allergen">
+                    <div class="legend-dot" style="background: var(--node-allergen)"></div>
+                    <span>Allergen</span>
+                </div>
+                <div class="legend-item" data-label="Alias">
+                    <div class="legend-dot" style="background: var(--node-alias)"></div>
+                    <span>Alias</span>
+                </div>
+                <div class="legend-item" data-label="Appointment">
+                    <div class="legend-dot" style="background: var(--node-default)"></div>
+                    <span>Appointment</span>
+                </div>
+                <div class="legend-clear" id="legendClear" style="display: none;">Show All</div>
+            </div>
+
+            <div class="graph-controls">
+                <button class="graph-control-btn" id="zoomInBtn" title="Zoom in">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                </button>
+                <button class="graph-control-btn" id="zoomOutBtn" title="Zoom out">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                </button>
+                <button class="graph-control-btn" id="fitBtn" title="Fit to screen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+            </div>
+        </main>
+
+        <!-- Results Panel -->
+        <aside class="results-panel">
+            <div class="panel-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line>
+                    <line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line>
+                    <line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line>
+                    <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line>
+                </svg>
+                Results
+            </div>
+            <div class="results-content" id="resultsContent">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <p>Run a query to see results</p>
+                </div>
+            </div>
+            <div class="node-detail" id="nodeDetail" style="display: none;">
+                <h3 id="detailTitle">Node Details</h3>
+                <div id="detailContent"></div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+    // Load theme
+    (function() {
+        const saved = localStorage.getItem('theme');
+        const theme = (saved === 'dark') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+    })();
+
+    class GraphExplorer {
+        constructor() {
+            this.canvas = document.getElementById('graphCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.nodes = [];
+            this.relationships = [];
+            this.queryResults = [];
+            this.selectedNode = null;
+
+            // View state
+            this.scale = 1;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.isPanning = false;
+            this.isDraggingNode = false;
+            this.draggedNode = null;
+            this.dragStart = { x: 0, y: 0 };
+            this.hoveredNode = null;
+            this.focusLabel = null; // For filtering by node type
+
+            // Node colors by label
+            this.colors = {
+                'Person': getComputedStyle(document.documentElement).getPropertyValue('--node-person').trim(),
+                'Condition': getComputedStyle(document.documentElement).getPropertyValue('--node-condition').trim(),
+                'Medication': getComputedStyle(document.documentElement).getPropertyValue('--node-medication').trim(),
+                'Allergen': getComputedStyle(document.documentElement).getPropertyValue('--node-allergen').trim(),
+                'Document': getComputedStyle(document.documentElement).getPropertyValue('--node-document').trim(),
+                'Alias': getComputedStyle(document.documentElement).getPropertyValue('--node-alias').trim(),
+            };
+            this.defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--node-default').trim();
+
+            this.init();
+        }
+
+        async init() {
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+
+            this.bindEvents();
+            await this.loadStats();
+            await this.loadGraph();
+        }
+
+        resizeCanvas() {
+            const rect = this.canvas.parentElement.getBoundingClientRect();
+            this.canvas.width = rect.width * window.devicePixelRatio;
+            this.canvas.height = rect.height * window.devicePixelRatio;
+            this.canvas.style.width = rect.width + 'px';
+            this.canvas.style.height = rect.height + 'px';
+            this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            this.render();
+        }
+
+        bindEvents() {
+            // Query controls
+            document.getElementById('runQueryBtn').addEventListener('click', () => this.runQuery());
+            document.getElementById('refreshBtn').addEventListener('click', () => this.loadGraph());
+
+            document.getElementById('queryInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    this.runQuery();
+                }
+            });
+
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('queryInput').value = btn.dataset.query;
+                    this.runQuery();
+                });
+            });
+
+            // Zoom controls
+            document.getElementById('zoomInBtn').addEventListener('click', () => this.zoom(1.2));
+            document.getElementById('zoomOutBtn').addEventListener('click', () => this.zoom(0.8));
+            document.getElementById('fitBtn').addEventListener('click', () => this.fitToScreen());
+
+            // Legend filter clicks
+            document.querySelectorAll('.legend-item[data-label]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const label = item.dataset.label;
+                    this.setFocusLabel(label);
+                });
+            });
+
+            document.getElementById('legendClear').addEventListener('click', () => {
+                this.setFocusLabel(null);
+            });
+
+            // Canvas interactions
+            this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
+            this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+            this.canvas.addEventListener('mouseup', () => this.onMouseUp());
+            this.canvas.addEventListener('wheel', (e) => this.onWheel(e));
+            this.canvas.addEventListener('click', (e) => this.onClick(e));
+        }
+
+        async loadStats() {
+            try {
+                const response = await fetch('/api/graph/stats');
+                const stats = await response.json();
+                document.getElementById('totalNodes').textContent = stats.total_nodes || 0;
+                document.getElementById('totalRels').textContent = stats.total_relationships || 0;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async loadGraph() {
+            try {
+                const response = await fetch('/api/graph/overview');
+                const data = await response.json();
+
+                this.nodes = data.nodes || [];
+                this.relationships = data.relationships || [];
+
+                // Assign positions using force-directed layout simulation
+                this.layoutNodes();
+                this.render();
+                this.displayResults(this.nodes);
+
+            } catch (e) {
+                console.error('Failed to load graph:', e);
+            }
+        }
+
+        async runQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) return;
+
+            try {
+                const response = await fetch('/api/graph/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Query failed');
+                }
+
+                this.queryResults = data.results || [];
+                this.displayQueryResults(this.queryResults);
+
+            } catch (e) {
+                console.error('Query error:', e);
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="empty-state" style="color: var(--error)">
+                        <p>Error: ${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        layoutNodes() {
+            const width = this.canvas.width / window.devicePixelRatio;
+            const height = this.canvas.height / window.devicePixelRatio;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            if (this.focusLabel) {
+                // Focused layout: put focused nodes in center, connected nodes around them
+                const focusedNodes = this.nodes.filter(n => n.labels[0] === this.focusLabel);
+                const otherNodes = this.nodes.filter(n => n.labels[0] !== this.focusLabel);
+
+                // Find nodes connected to focused nodes
+                const connectedIds = new Set();
+                this.relationships.forEach(rel => {
+                    const sourceNode = this.nodes.find(n => n.id === rel.source);
+                    const targetNode = this.nodes.find(n => n.id === rel.target);
+                    if (sourceNode && targetNode) {
+                        if (sourceNode.labels[0] === this.focusLabel) connectedIds.add(rel.target);
+                        if (targetNode.labels[0] === this.focusLabel) connectedIds.add(rel.source);
+                    }
+                });
+
+                const connectedNodes = otherNodes.filter(n => connectedIds.has(n.id));
+                const unconnectedNodes = otherNodes.filter(n => !connectedIds.has(n.id));
+
+                // Layout focused nodes in center circle
+                const focusAngleStep = (2 * Math.PI) / Math.max(focusedNodes.length, 1);
+                const focusRadius = Math.min(100, 30 + focusedNodes.length * 15);
+                focusedNodes.forEach((node, i) => {
+                    const angle = focusAngleStep * i - Math.PI / 2;
+                    node.x = centerX + Math.cos(angle) * focusRadius;
+                    node.y = centerY + Math.sin(angle) * focusRadius;
+                });
+
+                // Layout connected nodes in outer ring
+                const connectedAngleStep = (2 * Math.PI) / Math.max(connectedNodes.length, 1);
+                const connectedRadius = focusRadius + 120;
+                connectedNodes.forEach((node, i) => {
+                    const angle = connectedAngleStep * i - Math.PI / 2;
+                    node.x = centerX + Math.cos(angle) * connectedRadius;
+                    node.y = centerY + Math.sin(angle) * connectedRadius;
+                });
+
+                // Layout unconnected nodes in far outer ring (dimmed)
+                const unconnectedAngleStep = (2 * Math.PI) / Math.max(unconnectedNodes.length, 1);
+                const unconnectedRadius = connectedRadius + 100;
+                unconnectedNodes.forEach((node, i) => {
+                    const angle = unconnectedAngleStep * i;
+                    node.x = centerX + Math.cos(angle) * unconnectedRadius;
+                    node.y = centerY + Math.sin(angle) * unconnectedRadius;
+                });
+
+            } else {
+                // Default layout: grouped by label
+                const labelGroups = {};
+                this.nodes.forEach(node => {
+                    const label = node.labels[0] || 'Unknown';
+                    if (!labelGroups[label]) labelGroups[label] = [];
+                    labelGroups[label].push(node);
+                });
+
+                const labels = Object.keys(labelGroups);
+                const angleStep = (2 * Math.PI) / Math.max(labels.length, 1);
+
+                labels.forEach((label, labelIndex) => {
+                    const group = labelGroups[label];
+                    const groupAngle = angleStep * labelIndex - Math.PI / 2;
+                    const groupRadius = 150;
+                    const groupCenterX = centerX + Math.cos(groupAngle) * groupRadius;
+                    const groupCenterY = centerY + Math.sin(groupAngle) * groupRadius;
+
+                    const nodeAngleStep = (2 * Math.PI) / Math.max(group.length, 1);
+                    const nodeRadius = Math.min(80, 20 + group.length * 10);
+
+                    group.forEach((node, nodeIndex) => {
+                        const angle = nodeAngleStep * nodeIndex;
+                        node.x = groupCenterX + Math.cos(angle) * nodeRadius;
+                        node.y = groupCenterY + Math.sin(angle) * nodeRadius;
+                    });
+                });
+            }
+        }
+
+        render() {
+            const ctx = this.ctx;
+            const width = this.canvas.width / window.devicePixelRatio;
+            const height = this.canvas.height / window.devicePixelRatio;
+
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+
+            // Apply transforms
+            ctx.save();
+            ctx.translate(this.offsetX, this.offsetY);
+            ctx.scale(this.scale, this.scale);
+
+            // Draw relationships
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            this.relationships.forEach(rel => {
+                const source = this.nodes.find(n => n.id === rel.source);
+                const target = this.nodes.find(n => n.id === rel.target);
+                if (source && target && source.x && target.x) {
+                    ctx.beginPath();
+                    ctx.moveTo(source.x, source.y);
+                    ctx.lineTo(target.x, target.y);
+                    ctx.stroke();
+
+                    // Draw relationship label
+                    const midX = (source.x + target.x) / 2;
+                    const midY = (source.y + target.y) / 2;
+                    ctx.fillStyle = '#999';
+                    ctx.font = '9px DM Sans';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(rel.type, midX, midY - 4);
+                }
+            });
+
+            // Determine which nodes are "active" based on focus
+            let activeNodeIds = null;
+            if (this.focusLabel) {
+                activeNodeIds = new Set();
+                // Add focused nodes
+                this.nodes.filter(n => n.labels[0] === this.focusLabel).forEach(n => activeNodeIds.add(n.id));
+                // Add connected nodes
+                this.relationships.forEach(rel => {
+                    const sourceNode = this.nodes.find(n => n.id === rel.source);
+                    const targetNode = this.nodes.find(n => n.id === rel.target);
+                    if (sourceNode && targetNode) {
+                        if (sourceNode.labels[0] === this.focusLabel) activeNodeIds.add(rel.target);
+                        if (targetNode.labels[0] === this.focusLabel) activeNodeIds.add(rel.source);
+                    }
+                });
+            }
+
+            // Draw nodes
+            this.nodes.forEach(node => {
+                if (!node.x) return;
+
+                const label = node.labels[0] || 'Unknown';
+                const color = this.colors[label] || this.defaultColor;
+                const isSelected = this.selectedNode && this.selectedNode.id === node.id;
+                const isHovered = this.hoveredNode && this.hoveredNode.id === node.id;
+                const isDragging = this.draggedNode && this.draggedNode.id === node.id;
+                const isFocused = node.labels[0] === this.focusLabel;
+                const isActive = !activeNodeIds || activeNodeIds.has(node.id);
+                const isDimmed = activeNodeIds && !isActive;
+
+                // Adjust radius based on state
+                let radius = isDimmed ? 14 : 20;
+                if (isFocused && !isDimmed) radius = 24;
+                if (isHovered || isDragging) radius = 26;
+                if (isSelected) radius = 24;
+
+                // Skip dimmed nodes if too small on screen
+                if (isDimmed && this.scale < 0.5) return;
+
+                // Draw shadow for hovered/dragged/focused nodes
+                if ((isHovered || isDragging || isFocused) && !isDimmed) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctx.fill();
+                }
+
+                // Node circle
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = isDimmed ? (color + '40') : color; // Add transparency for dimmed
+                ctx.globalAlpha = isDimmed ? 0.4 : 1;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Selection/hover ring
+                if (isSelected || isHovered || isDragging || isFocused) {
+                    ctx.strokeStyle = isSelected ? '#fff' : isFocused ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = isSelected ? 3 : isFocused ? 2.5 : 2;
+                    ctx.stroke();
+                }
+
+                // Node label
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+                ctx.fillStyle = isDimmed ? (textColor + '60') : textColor;
+                ctx.font = (isHovered || isDragging || isFocused) ? 'bold 12px DM Sans' : '11px DM Sans';
+                ctx.textAlign = 'center';
+                if (!isDimmed || this.scale > 0.7) {
+                    ctx.fillText(node.label || node.id.slice(0, 8), node.x, node.y + radius + 16);
+                }
+            });
+
+            ctx.restore();
+        }
+
+        displayResults(nodes) {
+            const container = document.getElementById('resultsContent');
+
+            if (!nodes || nodes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No nodes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="result-count">${nodes.length} nodes</div>
+                ${nodes.map(node => this.renderNodeItem(node)).join('')}
+            `;
+
+            // Bind click events
+            container.querySelectorAll('.result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const nodeId = item.dataset.id;
+                    const node = this.nodes.find(n => n.id === nodeId);
+                    if (node) this.selectNode(node);
+                });
+            });
+        }
+
+        displayQueryResults(results) {
+            const container = document.getElementById('resultsContent');
+
+            if (!results || results.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No results</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="result-count">${results.length} results</div>
+                ${results.map((row, i) => `
+                    <div class="result-item">
+                        <div class="result-name">Result ${i + 1}</div>
+                        <div class="result-props">
+                            ${Object.entries(row).map(([k, v]) => `<div>${k}: ${JSON.stringify(v)}</div>`).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        renderNodeItem(node) {
+            const label = node.labels[0] || 'Unknown';
+            const color = this.colors[label] || this.defaultColor;
+            const props = Object.entries(node.properties || {})
+                .slice(0, 2)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(', ');
+
+            return `
+                <div class="result-item" data-id="${node.id}">
+                    <span class="result-label" style="background: ${color}; color: white;">${label}</span>
+                    <div class="result-name">${node.label || node.id}</div>
+                    <div class="result-props">${props}</div>
+                </div>
+            `;
+        }
+
+        async selectNode(node) {
+            this.selectedNode = node;
+            this.render();
+
+            // Mark selected in results
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.id === node.id);
+            });
+
+            // Load node details
+            try {
+                const response = await fetch(`/api/graph/node/${node.id}`);
+                const data = await response.json();
+                this.showNodeDetail(data);
+            } catch (e) {
+                console.error('Failed to load node details:', e);
+            }
+        }
+
+        showNodeDetail(data) {
+            const detail = document.getElementById('nodeDetail');
+            const title = document.getElementById('detailTitle');
+            const content = document.getElementById('detailContent');
+
+            const node = data.node;
+            const label = node.labels[0] || 'Unknown';
+            const color = this.colors[label] || this.defaultColor;
+
+            title.innerHTML = `
+                <span class="result-label" style="background: ${color}; color: white;">${label}</span>
+                ${node.properties.name || node.properties.preferred_name || node.id}
+            `;
+
+            content.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">Properties</div>
+                    ${Object.entries(node.properties).map(([k, v]) => `
+                        <div class="property-row">
+                            <span class="property-key">${k}</span>
+                            <span class="property-value" title="${v}">${v}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ${data.connections.length > 0 ? `
+                    <div class="detail-section">
+                        <div class="detail-label">Connections (${data.connections.length})</div>
+                        ${data.connections.map(conn => `
+                            <div class="connection-item">
+                                <span class="connection-arrow">${conn.direction === 'outgoing' ? '→' : '←'}</span>
+                                <span>${conn.relationship}</span>
+                                <span class="connection-arrow">${conn.direction === 'outgoing' ? '→' : '←'}</span>
+                                <span>${conn.name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+
+            detail.style.display = 'block';
+        }
+
+        // Get node at canvas position
+        getNodeAtPosition(canvasX, canvasY) {
+            const x = (canvasX - this.offsetX) / this.scale;
+            const y = (canvasY - this.offsetY) / this.scale;
+
+            return this.nodes.find(node => {
+                if (!node.x) return false;
+                const dx = node.x - x;
+                const dy = node.y - y;
+                return Math.sqrt(dx * dx + dy * dy) < 24; // Slightly larger hit area
+            });
+        }
+
+        // Canvas interactions
+        onMouseDown(e) {
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = e.clientX - rect.left;
+            const canvasY = e.clientY - rect.top;
+
+            // Check if clicking on a node
+            const node = this.getNodeAtPosition(canvasX, canvasY);
+
+            if (node) {
+                // Start dragging this node
+                this.isDraggingNode = true;
+                this.draggedNode = node;
+                this.dragStart = {
+                    x: (canvasX - this.offsetX) / this.scale - node.x,
+                    y: (canvasY - this.offsetY) / this.scale - node.y
+                };
+                this.canvas.style.cursor = 'grabbing';
+            } else {
+                // Start panning the canvas
+                this.isPanning = true;
+                this.dragStart = { x: e.clientX - this.offsetX, y: e.clientY - this.offsetY };
+                this.canvas.style.cursor = 'grabbing';
+            }
+        }
+
+        onMouseMove(e) {
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = e.clientX - rect.left;
+            const canvasY = e.clientY - rect.top;
+
+            if (this.isDraggingNode && this.draggedNode) {
+                // Move the dragged node
+                const newX = (canvasX - this.offsetX) / this.scale - this.dragStart.x;
+                const newY = (canvasY - this.offsetY) / this.scale - this.dragStart.y;
+                this.draggedNode.x = newX;
+                this.draggedNode.y = newY;
+                this.render();
+            } else if (this.isPanning) {
+                // Pan the canvas
+                this.offsetX = e.clientX - this.dragStart.x;
+                this.offsetY = e.clientY - this.dragStart.y;
+                this.render();
+            } else {
+                // Update hover state
+                const node = this.getNodeAtPosition(canvasX, canvasY);
+                if (node !== this.hoveredNode) {
+                    this.hoveredNode = node;
+                    this.canvas.style.cursor = node ? 'grab' : 'default';
+                    this.render();
+                }
+            }
+        }
+
+        onMouseUp(e) {
+            const wasDraggingNode = this.isDraggingNode;
+            const draggedNode = this.draggedNode;
+
+            this.isPanning = false;
+            this.isDraggingNode = false;
+            this.draggedNode = null;
+
+            // Update cursor based on hover
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = e.clientX - rect.left;
+            const canvasY = e.clientY - rect.top;
+            const node = this.getNodeAtPosition(canvasX, canvasY);
+            this.canvas.style.cursor = node ? 'grab' : 'default';
+
+            // If we just finished dragging a node with minimal movement, select it
+            if (wasDraggingNode && draggedNode) {
+                this.selectNode(draggedNode);
+            }
+        }
+
+        onWheel(e) {
+            e.preventDefault();
+            const factor = e.deltaY > 0 ? 0.9 : 1.1;
+            this.zoom(factor);
+        }
+
+        onClick(e) {
+            // Click handling is now done in onMouseUp for better drag detection
+        }
+
+        zoom(factor) {
+            this.scale *= factor;
+            this.scale = Math.max(0.2, Math.min(3, this.scale));
+            this.render();
+        }
+
+        fitToScreen() {
+            this.scale = 1;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.render();
+        }
+
+        setFocusLabel(label) {
+            this.focusLabel = label;
+
+            // Update legend UI
+            document.querySelectorAll('.legend-item[data-label]').forEach(item => {
+                item.classList.toggle('active', item.dataset.label === label);
+            });
+            document.getElementById('legendClear').style.display = label ? 'block' : 'none';
+
+            // Re-layout nodes with focus
+            this.layoutNodes();
+            this.fitToScreen();
+            this.render();
+
+            // Update results to show only focused nodes
+            if (label) {
+                const filtered = this.nodes.filter(n => n.labels[0] === label);
+                this.displayResults(filtered);
+            } else {
+                this.displayResults(this.nodes);
+            }
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        new GraphExplorer();
+    });
+    </script>
+</body>
+</html>

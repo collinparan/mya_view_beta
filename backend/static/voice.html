@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mya View - Voice Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FAF9F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F5F3F0;
+            --bg-warm: #FDF8F3;
+            --text-primary: #2D3142;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --accent: #5B8A72;
+            --accent-light: #E8F2ED;
+            --accent-hover: #4A7461;
+            --accent-warm: #D4A574;
+            --success: #5B8A72;
+            --warning: #E9B872;
+            --error: #C97064;
+            --border: #E8E6E3;
+            --border-light: #F0EEEB;
+            --shadow-soft: 0 2px 8px rgba(45, 49, 66, 0.06);
+            --shadow-medium: 0 4px 20px rgba(45, 49, 66, 0.08);
+            --shadow-large: 0 8px 40px rgba(45, 49, 66, 0.12);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --transition-gentle: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1C1E26;
+            --bg-secondary: #252830;
+            --bg-tertiary: #2D3142;
+            --bg-warm: #2A2D38;
+            --text-primary: #F5F4F2;
+            --text-secondary: #A8A9AD;
+            --text-muted: #6B7280;
+            --accent: #7BA896;
+            --accent-light: rgba(123, 168, 150, 0.15);
+            --accent-hover: #8FBAA8;
+            --border: #3D4152;
+            --border-light: #353845;
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --shadow-large: 0 8px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Atmospheric background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            right: -20%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(ellipse, rgba(91, 138, 114, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            left: -15%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(ellipse, rgba(212, 165, 116, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            transition: all var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .back-link:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .status-badge.connected {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .container {
+            text-align: center;
+            max-width: 480px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .voice-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all var(--transition-gentle);
+            position: relative;
+            margin: 0 auto 40px;
+            box-shadow: var(--shadow-large);
+        }
+
+        .voice-button:hover {
+            transform: scale(1.03);
+            border-color: var(--accent);
+            box-shadow: var(--shadow-large), 0 0 0 8px var(--accent-light);
+        }
+
+        .voice-button.listening {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            box-shadow: var(--shadow-large), 0 0 0 12px var(--accent-light);
+            animation: gentlePulse 2s infinite ease-in-out;
+        }
+
+        .voice-button.speaking {
+            border-color: var(--accent-warm);
+            background: rgba(212, 165, 116, 0.1);
+            box-shadow: var(--shadow-large), 0 0 0 12px rgba(212, 165, 116, 0.15);
+        }
+
+        .voice-button.processing {
+            border-color: var(--warning);
+            background: rgba(233, 184, 114, 0.1);
+            box-shadow: var(--shadow-large), 0 0 0 8px rgba(233, 184, 114, 0.15);
+        }
+
+        @keyframes gentlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .voice-button svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-secondary);
+            transition: color var(--transition-gentle);
+        }
+
+        .voice-button.listening svg,
+        .voice-button.speaking svg {
+            color: var(--accent);
+        }
+
+        .voice-button .label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            height: 32px;
+            margin-bottom: 8px;
+        }
+
+        .visualizer-bar {
+            width: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: height 0.15s ease;
+            opacity: 0.4;
+        }
+
+        .voice-button.listening .visualizer-bar {
+            opacity: 1;
+            animation: visualize 0.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes visualize {
+            from { height: 8px; }
+            to { height: 28px; }
+        }
+
+        .visualizer-bar:nth-child(1) { animation-delay: 0s; }
+        .visualizer-bar:nth-child(2) { animation-delay: 0.15s; }
+        .visualizer-bar:nth-child(3) { animation-delay: 0.3s; }
+        .visualizer-bar:nth-child(4) { animation-delay: 0.15s; }
+        .visualizer-bar:nth-child(5) { animation-delay: 0s; }
+
+        .transcript {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 24px;
+            min-height: 140px;
+            margin-bottom: 24px;
+            text-align: left;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+        }
+
+        .transcript-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+        }
+
+        .transcript-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            min-height: 72px;
+        }
+
+        .transcript-text.user {
+            color: var(--accent);
+        }
+
+        .transcript-text.assistant {
+            color: var(--text-primary);
+        }
+
+        .transcript-text.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .control-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .family-select {
+            padding: 12px 36px 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .family-select:hover {
+            border-color: var(--accent);
+        }
+
+        .family-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--shadow-soft), 0 0 0 3px var(--accent-light);
+        }
+
+        .error-message {
+            background: rgba(201, 112, 100, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .tips {
+            margin-top: 48px;
+            padding: 20px 24px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            text-align: left;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .tips-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tips-title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+        }
+
+        .tips-list {
+            list-style: none;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .tips-list li {
+            padding: 6px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .tips-list li::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Back to Chat
+        </a>
+        <span class="status-badge" id="statusBadge">Connecting...</span>
+    </div>
+
+    <div class="container">
+        <h1>Voice Assistant</h1>
+        <p class="subtitle">Click the button and speak naturally. I'll listen, think, and respond.</p>
+
+        <button class="voice-button" id="voiceButton">
+            <div class="visualizer">
+                <div class="visualizer-bar" style="height: 10px;"></div>
+                <div class="visualizer-bar" style="height: 16px;"></div>
+                <div class="visualizer-bar" style="height: 22px;"></div>
+                <div class="visualizer-bar" style="height: 16px;"></div>
+                <div class="visualizer-bar" style="height: 10px;"></div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            <span class="label" id="buttonLabel">Tap to speak</span>
+        </button>
+
+        <div class="transcript">
+            <div class="transcript-label">Conversation</div>
+            <div class="transcript-text empty" id="transcriptText">
+                Tap the button above to start talking...
+            </div>
+        </div>
+
+        <div class="controls">
+            <select class="family-select" id="familySelect">
+                <option value="">Loading members...</option>
+            </select>
+            <button class="control-btn" id="stopBtn">Stop Speaking</button>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <div class="tips">
+            <div class="tips-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Tips for best results
+            </div>
+            <ul class="tips-list">
+                <li>Speak clearly and at a natural pace</li>
+                <li>Tap the button again to interrupt and ask something new</li>
+                <li>Be specific about symptoms, dates, or medications</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    // Load theme first - default to light
+    (function() {
+        const saved = localStorage.getItem('theme');
+        // Only use dark if explicitly set to dark, otherwise light
+        const theme = (saved === 'dark') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    })();
+
+    class VoiceAssistant {
+        constructor() {
+            this.ws = null;
+            this.recognition = null;
+            this.synthesis = window.speechSynthesis;
+            this.isListening = false;
+            this.isSpeaking = false;
+            this.isProcessing = false;
+            this.currentUtterance = null;
+            this.familyMemberId = null;
+            this.fullResponse = '';
+
+            this.elements = {
+                voiceButton: document.getElementById('voiceButton'),
+                buttonLabel: document.getElementById('buttonLabel'),
+                transcriptText: document.getElementById('transcriptText'),
+                statusBadge: document.getElementById('statusBadge'),
+                familySelect: document.getElementById('familySelect'),
+                stopBtn: document.getElementById('stopBtn'),
+                errorMessage: document.getElementById('errorMessage'),
+            };
+
+            this.init();
+        }
+
+        init() {
+            this.checkSpeechSupport();
+            this.setupRecognition();
+            this.connectWebSocket();
+            this.loadFamilyMembers();
+            this.bindEvents();
+        }
+
+        checkSpeechSupport() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                this.showError('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+                return false;
+            }
+            return true;
+        }
+
+        setupRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+
+            this.recognition = new SpeechRecognition();
+            this.recognition.continuous = false;
+            this.recognition.interimResults = true;
+            this.recognition.lang = 'en-US';
+
+            this.recognition.onstart = () => {
+                this.isListening = true;
+                this.updateUI();
+            };
+
+            this.recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                this.updateTranscript(transcript, 'user', !event.results[event.results.length - 1].isFinal);
+
+                if (event.results[event.results.length - 1].isFinal) {
+                    this.processUserInput(transcript);
+                }
+            };
+
+            this.recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    this.showError(`Speech recognition error: ${event.error}`);
+                }
+                this.stopListening();
+            };
+
+            this.recognition.onend = () => {
+                this.isListening = false;
+                this.updateUI();
+            };
+        }
+
+        connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host || 'localhost:8000';
+
+            this.ws = new WebSocket(`${protocol}//${host}/ws/chat`);
+
+            this.ws.onopen = () => {
+                this.elements.statusBadge.textContent = 'Connected';
+                this.elements.statusBadge.classList.add('connected');
+            };
+
+            this.ws.onclose = () => {
+                this.elements.statusBadge.textContent = 'Disconnected';
+                this.elements.statusBadge.classList.remove('connected');
+                setTimeout(() => this.connectWebSocket(), 3000);
+            };
+
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.handleResponse(data);
+            };
+        }
+
+        async loadFamilyMembers() {
+            try {
+                const response = await fetch('/api/family/members');
+                const members = await response.json();
+
+                this.elements.familySelect.innerHTML = '';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = `${member.name} (${member.role})`;
+                    this.elements.familySelect.appendChild(option);
+                });
+
+                const selfMember = members.find(m => m.role === 'self');
+                if (selfMember) {
+                    this.elements.familySelect.value = selfMember.id;
+                    this.familyMemberId = selfMember.id;
+                } else if (members.length > 0) {
+                    this.familyMemberId = members[0].id;
+                }
+            } catch (error) {
+                console.error('Failed to load family members:', error);
+            }
+        }
+
+        bindEvents() {
+            this.elements.voiceButton.addEventListener('click', () => this.toggleListening());
+            this.elements.stopBtn.addEventListener('click', () => this.stopSpeaking());
+            this.elements.familySelect.addEventListener('change', (e) => {
+                this.familyMemberId = e.target.value;
+            });
+        }
+
+        toggleListening() {
+            if (this.isListening) {
+                this.stopListening();
+            } else {
+                this.stopSpeaking();
+                this.startListening();
+            }
+        }
+
+        startListening() {
+            if (!this.recognition) return;
+
+            try {
+                this.recognition.start();
+                this.hideError();
+            } catch (e) {
+                console.error('Failed to start recognition:', e);
+            }
+        }
+
+        stopListening() {
+            if (this.recognition) {
+                try {
+                    this.recognition.stop();
+                } catch (e) {}
+            }
+            this.isListening = false;
+            this.updateUI();
+        }
+
+        processUserInput(text) {
+            if (!text.trim()) return;
+
+            this.isProcessing = true;
+            this.fullResponse = '';
+            this.updateUI();
+
+            this.ws.send(JSON.stringify({
+                type: 'chat',
+                message: text,
+                family_member_id: this.familyMemberId,
+            }));
+        }
+
+        handleResponse(data) {
+            switch (data.type) {
+                case 'token':
+                    this.fullResponse = data.full;
+                    this.updateTranscript(this.fullResponse, 'assistant', true);
+                    break;
+
+                case 'done':
+                    this.isProcessing = false;
+                    this.updateTranscript(data.content, 'assistant', false);
+                    this.speak(data.content);
+                    break;
+
+                case 'error':
+                    this.isProcessing = false;
+                    this.showError(data.content);
+                    this.updateUI();
+                    break;
+            }
+        }
+
+        speak(text) {
+            this.synthesis.cancel();
+
+            this.currentUtterance = new SpeechSynthesisUtterance(text);
+            this.currentUtterance.rate = 1.0;
+            this.currentUtterance.pitch = 1.0;
+
+            const voices = this.synthesis.getVoices();
+            const preferredVoice = voices.find(v =>
+                v.name.includes('Samantha') ||
+                v.name.includes('Google') ||
+                v.name.includes('Natural') ||
+                v.lang.startsWith('en')
+            );
+            if (preferredVoice) {
+                this.currentUtterance.voice = preferredVoice;
+            }
+
+            this.currentUtterance.onstart = () => {
+                this.isSpeaking = true;
+                this.updateUI();
+            };
+
+            this.currentUtterance.onend = () => {
+                this.isSpeaking = false;
+                this.currentUtterance = null;
+                this.updateUI();
+            };
+
+            this.currentUtterance.onerror = () => {
+                this.isSpeaking = false;
+                this.currentUtterance = null;
+                this.updateUI();
+            };
+
+            this.synthesis.speak(this.currentUtterance);
+        }
+
+        stopSpeaking() {
+            this.synthesis.cancel();
+            this.isSpeaking = false;
+            this.currentUtterance = null;
+            this.updateUI();
+        }
+
+        updateUI() {
+            const btn = this.elements.voiceButton;
+            const label = this.elements.buttonLabel;
+
+            btn.classList.remove('listening', 'speaking', 'processing');
+
+            if (this.isListening) {
+                btn.classList.add('listening');
+                label.textContent = 'Listening...';
+            } else if (this.isProcessing) {
+                btn.classList.add('processing');
+                label.textContent = 'Thinking...';
+            } else if (this.isSpeaking) {
+                btn.classList.add('speaking');
+                label.textContent = 'Speaking...';
+            } else {
+                label.textContent = 'Tap to speak';
+            }
+        }
+
+        updateTranscript(text, role, isPartial = false) {
+            const el = this.elements.transcriptText;
+            el.classList.remove('empty', 'user', 'assistant');
+            el.classList.add(role);
+
+            const prefix = role === 'user' ? 'You: ' : 'Assistant: ';
+            el.textContent = prefix + text + (isPartial ? '...' : '');
+        }
+
+        showError(message) {
+            this.elements.errorMessage.textContent = message;
+            this.elements.errorMessage.style.display = 'block';
+        }
+
+        hideError() {
+            this.elements.errorMessage.style.display = 'none';
+        }
+    }
+
+    window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.voiceAssistant = new VoiceAssistant();
+    });
+    </script>
+</body>
+</html>

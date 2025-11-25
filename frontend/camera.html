@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mya View - Live Health Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Matching main app palette */
+      --bg-primary: #FAF9F7;
+      --bg-secondary: #FFFFFF;
+      --bg-tertiary: #F5F3F0;
+      --text-primary: #2D3142;
+      --text-secondary: #6B7280;
+      --text-muted: #9CA3AF;
+      --accent: #5B8A72;
+      --accent-light: #E8F2ED;
+      --accent-hover: #4A7461;
+      --accent-warm: #D4A574;
+      --success: #5B8A72;
+      --warning: #E9B872;
+      --error: #C97064;
+      --border: #E8E6E3;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --transition-gentle: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Subtitle-style overlays - very transparent */
+      --overlay-bg: rgba(0, 0, 0, 0.45);
+      --overlay-text: #FFFFFF;
+      --overlay-muted: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] {
+      --overlay-bg: rgba(0, 0, 0, 0.55);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #000;
+      color: var(--overlay-text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Full-screen camera */
+    #video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #0a0a0a;
+    }
+
+    #canvas { display: none; }
+
+    /* Top bar - minimal, transparent */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-warm) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-mark svg {
+      width: 20px;
+      height: 20px;
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .logo-text span { color: var(--accent-warm); }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      margin-left: 12px;
+    }
+
+    .nav-link {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      transition: var(--transition-gentle);
+    }
+
+    .nav-link:hover {
+      color: white;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .nav-link.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .spacer { flex: 1; }
+
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .dot.pulse { animation: pulse 2s ease-in-out infinite; }
+    .dot.analyzing { background: var(--accent-warm); animation: pulse 0.5s ease-in-out infinite; }
+    .dot.disconnected { background: var(--error); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-gentle);
+    }
+
+    .btn-icon:hover { background: rgba(255,255,255,0.25); }
+    .btn-icon svg { width: 20px; height: 20px; }
+
+    /* Bottom subtitle-style analysis panel */
+    .subtitle-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 24px 32px;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+      z-index: 5;
+    }
+
+    .subtitle-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .analysis-text {
+      font-size: 18px;
+      line-height: 1.6;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      margin-bottom: 16px;
+      min-height: 28px;
+    }
+
+    .analysis-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 16px;
+    }
+
+    .subtitle-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .prompt-input {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition-gentle);
+    }
+
+    .prompt-input::placeholder { color: rgba(255,255,255,0.4); }
+    .prompt-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.15); }
+
+    .btn {
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: white;
+      font-size: 14px;
+      transition: var(--transition-gentle);
+    }
+
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    .auto-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+    }
+
+    .auto-toggle input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    /* Side panel for history - minimal */
+    .side-panel {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 280px;
+      max-height: 50vh;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 16px;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .side-panel.collapsed {
+      width: auto;
+      max-height: none;
+      padding: 8px;
+    }
+
+    .side-panel.collapsed .panel-content { display: none; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .side-panel.collapsed .panel-header { margin-bottom: 0; }
+
+    .panel-toggle {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 16px;
+    }
+
+    .panel-toggle:hover { color: white; }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: calc(50vh - 80px);
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .history-item .time {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .history-item .text {
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* Quick prompts - floating pills */
+    .quick-prompts {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    .quick-prompt {
+      background: var(--overlay-bg);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.85);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition-gentle);
+      text-align: left;
+      max-width: 200px;
+    }
+
+    .quick-prompt:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Disclaimer - very subtle */
+    .disclaimer {
+      position: fixed;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      z-index: 4;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .side-panel { display: none; }
+      .quick-prompts { display: none; }
+
+      .subtitle-panel { padding: 16px 16px 24px; }
+      .analysis-text { font-size: 16px; }
+
+      .subtitle-controls { flex-wrap: wrap; }
+      .prompt-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- Top Navigation -->
+  <div class="topbar">
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </div>
+      <span class="logo-text">Mya <span>View</span></span>
+    </a>
+
+    <div class="nav-links">
+      <a href="/" class="nav-link">Chat</a>
+      <a href="/voice" class="nav-link">Voice</a>
+      <a href="/camera" class="nav-link active">Camera</a>
+      <a href="/settings" class="nav-link">Settings</a>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="status-chip">
+      <span class="dot pulse" id="statusDot"></span>
+      <span id="statusText">Ready</span>
+    </div>
+
+    <button id="downloadBtn" class="btn-icon" title="Export observations">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Side panel - observation history -->
+  <div class="side-panel" id="historyPanel">
+    <div class="panel-header">
+      <span>Observations</span>
+      <button class="panel-toggle" id="toggleHistory">-</button>
+    </div>
+    <div class="panel-content">
+      <div class="history-list" id="historyList">
+        <div class="history-item" style="color: rgba(255,255,255,0.5); font-style: italic;">
+          No observations yet
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick prompts -->
+  <div class="quick-prompts" id="quickPrompts">
+    <button class="quick-prompt" data-prompt="Does this look healthy?">Does this look healthy?</button>
+    <button class="quick-prompt" data-prompt="Any redness or swelling?">Any redness or swelling?</button>
+    <button class="quick-prompt" data-prompt="Read this label">Read this label</button>
+    <button class="quick-prompt" data-prompt="What should I tell my doctor?">What should I tell my doctor?</button>
+  </div>
+
+  <!-- Bottom subtitle panel -->
+  <div class="subtitle-panel">
+    <div class="subtitle-content">
+      <div class="analysis-text" id="analysisText">
+        Point your camera at what you'd like Mya to look at, then tap "Analyze"
+      </div>
+      <div class="analysis-meta" id="analysisMeta"></div>
+
+      <div class="subtitle-controls">
+        <input type="text" class="prompt-input" id="promptInput" placeholder="Ask Mya something...">
+        <button class="btn" id="analyzeBtn">Analyze</button>
+        <label class="auto-toggle">
+          <input type="checkbox" id="autoCapture">
+          Auto
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">For informational purposes only. Consult a healthcare professional for medical advice.</div>
+
+<script>
+// Force light mode on load
+document.documentElement.setAttribute('data-theme', 'light');
+
+class MayaCameraApp {
+  constructor() {
+    this.wsVision = null;
+    this.connected = false;
+    this.analyzing = false;
+    this.autoInterval = null;
+    this.sessionStart = Date.now();
+    this.observations = [];
+    this.currentResponse = '';
+
+    this.elements = {
+      video: document.getElementById('video'),
+      canvas: document.getElementById('canvas'),
+      analysisText: document.getElementById('analysisText'),
+      analysisMeta: document.getElementById('analysisMeta'),
+      promptInput: document.getElementById('promptInput'),
+      analyzeBtn: document.getElementById('analyzeBtn'),
+      autoCapture: document.getElementById('autoCapture'),
+      statusDot: document.getElementById('statusDot'),
+      statusText: document.getElementById('statusText'),
+      historyList: document.getElementById('historyList'),
+      historyPanel: document.getElementById('historyPanel'),
+      toggleHistory: document.getElementById('toggleHistory'),
+      quickPrompts: document.getElementById('quickPrompts'),
+      downloadBtn: document.getElementById('downloadBtn'),
+    };
+
+    this.init();
+  }
+
+  async init() {
+    await this.setupCamera();
+    this.connectWebSocket();
+    this.bindEvents();
+  }
+
+  async setupCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      this.elements.video.srcObject = stream;
+      await this.elements.video.play();
+    } catch (e) {
+      this.elements.analysisText.textContent = 'Camera access needed. Please allow permissions and refresh.';
+      console.error('Camera error:', e);
+    }
+  }
+
+  connectWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || 'localhost:8000';
+
+    this.wsVision = new WebSocket(`${protocol}//${host}/ws/vision`);
+
+    this.wsVision.onopen = () => {
+      this.connected = true;
+      this.updateStatus('connected');
+    };
+
+    this.wsVision.onclose = () => {
+      this.connected = false;
+      this.updateStatus('disconnected');
+      setTimeout(() => this.connectWebSocket(), 3000);
+    };
+
+    this.wsVision.onerror = (error) => console.error('WebSocket error:', error);
+
+    this.wsVision.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      this.handleResponse(data);
+    };
+  }
+
+  updateStatus(status) {
+    const dot = this.elements.statusDot;
+    const text = this.elements.statusText;
+
+    dot.classList.remove('pulse', 'analyzing', 'disconnected');
+
+    if (status === 'connected') {
+      dot.classList.add('pulse');
+      text.textContent = 'Ready';
+    } else if (status === 'analyzing') {
+      dot.classList.add('analyzing');
+      text.textContent = 'Analyzing...';
+    } else {
+      dot.classList.add('disconnected');
+      text.textContent = 'Reconnecting...';
+    }
+  }
+
+  bindEvents() {
+    this.elements.analyzeBtn.addEventListener('click', () => this.captureAndAnalyze());
+
+    this.elements.promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.captureAndAnalyze();
+      }
+    });
+
+    this.elements.autoCapture.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        this.startAutoCapture();
+      } else {
+        this.stopAutoCapture();
+      }
+    });
+
+    this.elements.toggleHistory.addEventListener('click', () => {
+      const panel = this.elements.historyPanel;
+      const collapsed = panel.classList.toggle('collapsed');
+      this.elements.toggleHistory.textContent = collapsed ? '+' : '-';
+    });
+
+    this.elements.quickPrompts.querySelectorAll('.quick-prompt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.elements.promptInput.value = btn.dataset.prompt;
+        this.captureAndAnalyze();
+      });
+    });
+
+    this.elements.downloadBtn.addEventListener('click', () => this.exportObservations());
+  }
+
+  startAutoCapture() {
+    this.captureAndAnalyze();
+    this.autoInterval = setInterval(() => {
+      if (!this.analyzing) this.captureAndAnalyze();
+    }, 5000);
+  }
+
+  stopAutoCapture() {
+    if (this.autoInterval) {
+      clearInterval(this.autoInterval);
+      this.autoInterval = null;
+    }
+  }
+
+  captureFrame() {
+    const video = this.elements.video;
+    const canvas = this.elements.canvas;
+
+    if (!video.videoWidth) return null;
+
+    const maxWidth = 1024;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    return canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+  }
+
+  captureAndAnalyze() {
+    if (!this.connected || this.analyzing) return;
+
+    const imageB64 = this.captureFrame();
+    if (!imageB64) {
+      this.elements.analysisText.textContent = 'Waiting for camera...';
+      return;
+    }
+
+    const prompt = this.elements.promptInput.value.trim() ||
+      "Does this look normal and healthy? What observations would help me discuss this with my doctor?";
+
+    this.analyzing = true;
+    this.currentResponse = '';
+    this.updateStatus('analyzing');
+    this.elements.analyzeBtn.disabled = true;
+    this.elements.analysisText.textContent = 'Looking...';
+    this.elements.analysisMeta.textContent = '';
+
+    // Include recent context
+    const recentContext = this.observations.slice(-2).map(o => o.response.slice(0, 60)).join(' | ');
+    const fullPrompt = recentContext ? `Previous: ${recentContext}\n\nNow: ${prompt}` : prompt;
+
+    this.wsVision.send(JSON.stringify({
+      type: 'vision',
+      image_b64: imageB64,
+      prompt: fullPrompt,
+      family_member_id: null
+    }));
+
+    this.analysisStartTime = performance.now();
+  }
+
+  handleResponse(data) {
+    switch (data.type) {
+      case 'token':
+        this.currentResponse = data.full || this.currentResponse + data.content;
+        this.elements.analysisText.textContent = this.currentResponse;
+        break;
+
+      case 'done':
+        this.analyzing = false;
+        this.updateStatus('connected');
+        this.elements.analyzeBtn.disabled = false;
+
+        const elapsed = ((performance.now() - this.analysisStartTime) / 1000).toFixed(1);
+        this.elements.analysisMeta.textContent = `${elapsed}s`;
+
+        const observation = {
+          timestamp: new Date().toISOString(),
+          relTime: ((Date.now() - this.sessionStart) / 1000).toFixed(0),
+          prompt: this.elements.promptInput.value.trim() || 'Health check',
+          response: data.content
+        };
+        this.observations.push(observation);
+        this.updateHistory();
+        break;
+
+      case 'error':
+        this.analyzing = false;
+        this.updateStatus('connected');
+        this.elements.analyzeBtn.disabled = false;
+        this.elements.analysisText.textContent = 'Something went wrong. Please try again.';
+        break;
+    }
+  }
+
+  updateHistory() {
+    const recent = this.observations.slice(-5).reverse();
+
+    if (recent.length === 0) {
+      this.elements.historyList.innerHTML = '<div class="history-item" style="opacity:0.5;font-style:italic;">No observations yet</div>';
+      return;
+    }
+
+    this.elements.historyList.innerHTML = recent.map(o => `
+      <div class="history-item">
+        <div class="time">${o.relTime}s ago</div>
+        <div class="text">${o.response.slice(0, 100)}${o.response.length > 100 ? '...' : ''}</div>
+      </div>
+    `).join('');
+  }
+
+  exportObservations() {
+    if (this.observations.length === 0) {
+      alert('No observations to export yet.');
+      return;
+    }
+
+    const data = {
+      session: {
+        start: new Date(this.sessionStart).toISOString(),
+        duration: ((Date.now() - this.sessionStart) / 1000 / 60).toFixed(1) + ' minutes',
+        count: this.observations.length
+      },
+      observations: this.observations
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mya-observations-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+new MayaCameraApp();
+</script>
+</body>
+</html>

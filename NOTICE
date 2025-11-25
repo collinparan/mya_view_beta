@@ -1,0 +1,16 @@
+Mya View
+Copyright 2024 Collin Paran
+
+This product includes software developed by Collin Paran.
+
+Licensed under the Apache License, Version 2.0.
+
+If you use this software, please provide attribution to the original author:
+- Include this NOTICE file in any distribution
+- Credit "Collin Paran" and link to https://github.com/collinparan/mya_view_beta
+
+Third-party components:
+- Ollama (https://ollama.ai/) - MIT License
+- FastAPI (https://fastapi.tiangolo.com/) - MIT License
+- Neo4j (https://neo4j.com/) - Various licenses
+- pgvector (https://github.com/pgvector/pgvector) - PostgreSQL License

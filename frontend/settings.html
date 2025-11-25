@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mya View - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FAF9F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F5F3F0;
+            --bg-warm: #FDF8F3;
+            --text-primary: #2D3142;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --accent: #5B8A72;
+            --accent-light: #E8F2ED;
+            --accent-hover: #4A7461;
+            --accent-warm: #D4A574;
+            --success: #5B8A72;
+            --warning: #E9B872;
+            --error: #C97064;
+            --border: #E8E6E3;
+            --border-light: #F0EEEB;
+            --shadow-soft: 0 2px 8px rgba(45, 49, 66, 0.06);
+            --shadow-medium: 0 4px 20px rgba(45, 49, 66, 0.08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --transition-gentle: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1C1E26;
+            --bg-secondary: #252830;
+            --bg-tertiary: #2D3142;
+            --bg-warm: #2A2D38;
+            --text-primary: #F5F4F2;
+            --text-secondary: #A8A9AD;
+            --text-muted: #6B7280;
+            --accent: #7BA896;
+            --accent-light: rgba(123, 168, 150, 0.15);
+            --accent-hover: #8FBAA8;
+            --border: #3D4152;
+            --border-light: #353845;
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Atmospheric background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40%;
+            right: -30%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(ellipse, rgba(91, 138, 114, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            transition: all var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .back-link:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .save-btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .save-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .settings-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-light);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+            line-height: 1.6;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .setting-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .import-btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .import-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .import-btn svg {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            width: 18px;
+            height: 18px;
+        }
+
+        select, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all var(--transition-gentle);
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 44px;
+        }
+
+        select:hover, input:hover {
+            border-color: var(--accent);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .toggle-row:first-child {
+            padding-top: 0;
+        }
+
+        .toggle-info {
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .toggle-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .toggle-description {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            transition: var(--transition-gentle);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition-gentle);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .api-key-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .api-key-group input {
+            flex: 1;
+        }
+
+        .api-key-group button {
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            flex-shrink: 0;
+        }
+
+        .api-key-group button:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .voice-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .preview-btn {
+            padding: 10px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-gentle);
+        }
+
+        .preview-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .preview-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            padding: 16px 24px;
+            background: var(--accent);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all var(--transition-gentle);
+            z-index: 1000;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background: var(--error);
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .theme-option {
+            flex: 1;
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all var(--transition-gentle);
+            text-align: center;
+            background: var(--bg-tertiary);
+        }
+
+        .theme-option:hover {
+            border-color: var(--accent);
+        }
+
+        .theme-option.selected {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .theme-preview {
+            width: 100%;
+            height: 48px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-light);
+        }
+
+        .theme-preview.light {
+            background: linear-gradient(135deg, #FAF9F7 0%, #FFFFFF 50%, #F5F3F0 100%);
+        }
+
+        .theme-preview.dark {
+            background: linear-gradient(135deg, #1C1E26 0%, #252830 50%, #2D3142 100%);
+        }
+
+        .theme-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="/" class="back-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Back
+                </a>
+                <h1>Settings</h1>
+            </div>
+            <button class="save-btn" id="saveBtn">Save Changes</button>
+        </div>
+
+        <!-- General Settings -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <h2>General</h2>
+            </div>
+            <p class="section-description">Configure your primary family member and general preferences.</p>
+
+            <div class="setting-group">
+                <label class="setting-label">Primary Family Member</label>
+                <select id="primaryMemberSelect">
+                    <option value="">Loading members...</option>
+                </select>
+                <p class="setting-hint">This member will be automatically selected when you open the app. Defaults to you (self) if not set.</p>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Import Health Records</label>
+                <a href="/ccd-import" class="import-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    Import CCD File
+                </a>
+                <p class="setting-hint">Upload health records from your healthcare provider (MyChart, Patient Gateway, etc.)</p>
+            </div>
+        </div>
+
+        <!-- Language Model Settings -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                </div>
+                <h2>Language Model</h2>
+            </div>
+            <p class="section-description">Choose the AI models for conversations and analysis. All models run locally via Ollama for complete privacy.</p>
+
+            <div class="setting-group">
+                <label class="setting-label">Primary Chat Model</label>
+                <select id="primaryModel">
+                    <option value="">Loading models...</option>
+                </select>
+                <p class="setting-hint">The main model for conversations and medical questions.</p>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Vision Model</label>
+                <select id="visionModel">
+                    <option value="">Loading models...</option>
+                </select>
+                <p class="setting-hint">Used for analyzing images like prescriptions and lab results.</p>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Embedding Model</label>
+                <select id="embeddingModel">
+                    <option value="bge-m3">BGE-M3 (Recommended)</option>
+                    <option value="nomic-embed-text">Nomic Embed Text</option>
+                    <option value="mxbai-embed-large">MXBai Embed Large</option>
+                </select>
+                <p class="setting-hint">Enables semantic search across your documents.</p>
+            </div>
+        </div>
+
+        <!-- Voice Settings -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </div>
+                <h2>Voice & Speech</h2>
+            </div>
+            <p class="section-description">Configure how the assistant speaks to you in voice mode.</p>
+
+            <div class="setting-group">
+                <label class="setting-label">Text-to-Speech Provider</label>
+                <select id="ttsProvider">
+                    <option value="browser">Browser Native (Free)</option>
+                    <option value="elevenlabs">ElevenLabs</option>
+                    <option value="sesame">Sesame CSM</option>
+                    <option value="bark">Bark (Local)</option>
+                    <option value="coqui">Coqui TTS (Local)</option>
+                    <option value="openai">OpenAI TTS</option>
+                </select>
+                <p class="setting-hint">Browser native uses your system's built-in voices at no cost.</p>
+            </div>
+
+            <div class="setting-group" id="elevenLabsSettings" style="display: none;">
+                <label class="setting-label">ElevenLabs API Key</label>
+                <div class="api-key-group">
+                    <input type="password" id="elevenLabsKey" placeholder="Enter your API key">
+                    <button type="button" onclick="toggleApiKeyVisibility('elevenLabsKey')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-group" id="openAiTtsSettings" style="display: none;">
+                <label class="setting-label">OpenAI API Key</label>
+                <div class="api-key-group">
+                    <input type="password" id="openAiKey" placeholder="Enter your API key">
+                    <button type="button" onclick="toggleApiKeyVisibility('openAiKey')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Voice</label>
+                <select id="voiceSelection">
+                    <option value="default">Default System Voice</option>
+                </select>
+                <div class="voice-preview">
+                    <button class="preview-btn" onclick="previewVoice()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Preview Voice
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Speech Speed</label>
+                <select id="speechRate">
+                    <option value="0.75">Slower</option>
+                    <option value="1" selected>Normal</option>
+                    <option value="1.25">Faster</option>
+                    <option value="1.5">Much Faster</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Appearance Settings -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                    </svg>
+                </div>
+                <h2>Appearance</h2>
+            </div>
+            <p class="section-description">Choose how the interface looks and feels.</p>
+
+            <div class="setting-group">
+                <label class="setting-label">Theme</label>
+                <div class="theme-options">
+                    <div class="theme-option selected" data-theme="light" onclick="selectTheme('light')">
+                        <div class="theme-preview light"></div>
+                        <span class="theme-label">Light</span>
+                    </div>
+                    <div class="theme-option" data-theme="dark" onclick="selectTheme('dark')">
+                        <div class="theme-preview dark"></div>
+                        <span class="theme-label">Dark</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h2>Privacy & Data</h2>
+            </div>
+            <p class="section-description">Control how your health information is stored and handled.</p>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Local Processing Only</div>
+                    <div class="toggle-description">All AI processing happens on your device. Nothing is sent to external servers.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="localProcessing" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Save Conversation History</div>
+                    <div class="toggle-description">Keep a record of past conversations for reference. You can clear this anytime.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="saveChatHistory" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Audit Logging</div>
+                    <div class="toggle-description">Track when health data is accessed for your records.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auditLogging" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // Load theme first - default to light
+    (function() {
+        const saved = localStorage.getItem('theme');
+        // Only use dark if explicitly set to dark, otherwise light
+        const theme = (saved === 'dark') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    })();
+
+    class SettingsManager {
+        constructor() {
+            this.settings = {};
+            this.originalSettings = {};
+            this.hasChanges = false;
+
+            this.elements = {
+                saveBtn: document.getElementById('saveBtn'),
+                toast: document.getElementById('toast'),
+                primaryMemberSelect: document.getElementById('primaryMemberSelect'),
+                primaryModel: document.getElementById('primaryModel'),
+                visionModel: document.getElementById('visionModel'),
+                embeddingModel: document.getElementById('embeddingModel'),
+                ttsProvider: document.getElementById('ttsProvider'),
+                voiceSelection: document.getElementById('voiceSelection'),
+                speechRate: document.getElementById('speechRate'),
+                elevenLabsKey: document.getElementById('elevenLabsKey'),
+                openAiKey: document.getElementById('openAiKey'),
+                elevenLabsSettings: document.getElementById('elevenLabsSettings'),
+                openAiTtsSettings: document.getElementById('openAiTtsSettings'),
+                localProcessing: document.getElementById('localProcessing'),
+                saveChatHistory: document.getElementById('saveChatHistory'),
+                auditLogging: document.getElementById('auditLogging'),
+            };
+
+            this.init();
+        }
+
+        async init() {
+            await this.loadSettings();
+            await this.loadFamilyMembers();
+            await this.loadOllamaModels();
+            this.loadBrowserVoices();
+            this.bindEvents();
+            this.applyTheme();
+        }
+
+        async loadSettings() {
+            // One-time theme reset to light (v2 migration)
+            if (!localStorage.getItem('myaThemeResetV2')) {
+                localStorage.setItem('theme', 'light');
+                localStorage.setItem('myaThemeResetV2', 'done');
+                const existing = localStorage.getItem('myaViewSettings');
+                if (existing) {
+                    const settings = JSON.parse(existing);
+                    settings.theme = 'light';
+                    localStorage.setItem('myaViewSettings', JSON.stringify(settings));
+                }
+                // Clean up old keys
+                localStorage.removeItem('assistHealthSettings');
+            }
+
+            const stored = localStorage.getItem('myaViewSettings');
+            if (stored) {
+                this.settings = JSON.parse(stored);
+            } else {
+                this.settings = {
+                    primary_member_id: '',
+                    primaryModel: 'llama3.2-vision:11b',
+                    visionModel: 'llama3.2-vision:11b',
+                    embeddingModel: 'bge-m3',
+                    ttsProvider: 'browser',
+                    voiceSelection: 'default',
+                    speechRate: '1',
+                    theme: 'light',
+                    localProcessing: true,
+                    saveChatHistory: true,
+                    auditLogging: true,
+                    elevenLabsKey: '',
+                    openAiKey: '',
+                };
+            }
+
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const serverSettings = await response.json();
+                    // Don't let server override theme - theme is client-side only
+                    const localTheme = this.settings.theme;
+                    this.settings = { ...this.settings, ...serverSettings };
+                    this.settings.theme = localTheme || 'light';
+                }
+            } catch (e) {
+                console.log('Using local settings');
+            }
+
+            this.originalSettings = { ...this.settings };
+            this.applySettingsToUI();
+        }
+
+        applySettingsToUI() {
+            this.elements.primaryModel.value = this.settings.primaryModel || '';
+            this.elements.visionModel.value = this.settings.visionModel || '';
+            this.elements.embeddingModel.value = this.settings.embeddingModel || 'bge-m3';
+            this.elements.ttsProvider.value = this.settings.ttsProvider || 'browser';
+            this.elements.speechRate.value = this.settings.speechRate || '1';
+            this.elements.elevenLabsKey.value = this.settings.elevenLabsKey || '';
+            this.elements.openAiKey.value = this.settings.openAiKey || '';
+            this.elements.localProcessing.checked = this.settings.localProcessing !== false;
+            this.elements.saveChatHistory.checked = this.settings.saveChatHistory !== false;
+            this.elements.auditLogging.checked = this.settings.auditLogging !== false;
+
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.theme === this.settings.theme);
+            });
+
+            this.updateProviderSettings();
+        }
+
+        async loadFamilyMembers() {
+            try {
+                const response = await fetch('/api/family/members');
+                const members = await response.json();
+
+                const select = this.elements.primaryMemberSelect;
+                select.innerHTML = '';
+
+                // Filter out Demo User to get only real family members
+                const realMembers = members.filter(m => m.id !== 'demo');
+
+                // Add real family members FIRST
+                realMembers.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = `${member.name} (${member.role})`;
+                    select.appendChild(option);
+                });
+
+                // Add Demo User at the END
+                const demoOption = document.createElement('option');
+                demoOption.value = 'demo';
+                demoOption.textContent = 'Demo User';
+                select.appendChild(demoOption);
+
+                // Set current selection from settings, or default to first real user
+                const savedPrimary = this.settings.primary_member_id;
+                if (savedPrimary && savedPrimary !== 'demo' && savedPrimary !== '') {
+                    // Verify the saved primary still exists
+                    const primaryExists = realMembers.find(m => m.id === savedPrimary);
+                    if (primaryExists) {
+                        select.value = savedPrimary;
+                    } else if (realMembers.length > 0) {
+                        // Primary was deleted, default to first real user
+                        const selfMember = realMembers.find(m => m.role === 'self');
+                        const defaultMember = selfMember || realMembers[0];
+                        select.value = defaultMember.id;
+                        this.settings.primary_member_id = defaultMember.id;
+                        localStorage.setItem('myaViewSettings', JSON.stringify(this.settings));
+                    }
+                } else if (realMembers.length > 0) {
+                    // No primary set OR primary is demo - default to first real user (excluding demo)
+                    const selfMember = realMembers.find(m => m.role === 'self');
+                    const defaultMember = selfMember || realMembers[0];
+                    select.value = defaultMember.id;
+                    // Save this as the default
+                    this.settings.primary_member_id = defaultMember.id;
+                    localStorage.setItem('myaViewSettings', JSON.stringify(this.settings));
+                    console.log('Saved primary member to localStorage:', defaultMember.id);
+                }
+
+            } catch (error) {
+                console.error('Failed to load family members:', error);
+                // Add demo option on error
+                const select = this.elements.primaryMemberSelect;
+                select.innerHTML = '<option value="demo">Demo User</option>';
+                select.value = 'demo';
+            }
+        }
+
+        async loadOllamaModels() {
+            try {
+                const response = await fetch('/api/settings/models');
+                if (!response.ok) throw new Error('Failed to load models');
+
+                const data = await response.json();
+                const models = data.models || [];
+
+                const modelSelects = [this.elements.primaryModel, this.elements.visionModel];
+                modelSelects.forEach(select => {
+                    select.innerHTML = '<option value="">Select a model...</option>';
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name;
+                        option.textContent = `${model.name} (${this.formatSize(model.size)})`;
+                        select.appendChild(option);
+                    });
+                });
+
+                this.elements.primaryModel.value = this.settings.primaryModel || '';
+                this.elements.visionModel.value = this.settings.visionModel || '';
+
+            } catch (error) {
+                console.error('Failed to load Ollama models:', error);
+                [this.elements.primaryModel, this.elements.visionModel].forEach(select => {
+                    select.innerHTML = `
+                        <option value="llama3.2-vision:11b">llama3.2-vision:11b</option>
+                        <option value="llama3.1:8b">llama3.1:8b</option>
+                        <option value="mistral:7b">mistral:7b</option>
+                    `;
+                });
+            }
+        }
+
+        loadBrowserVoices() {
+            const populateVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                this.elements.voiceSelection.innerHTML = '<option value="default">Default System Voice</option>';
+
+                voices.forEach((voice, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    this.elements.voiceSelection.appendChild(option);
+                });
+
+                if (this.settings.voiceSelection) {
+                    this.elements.voiceSelection.value = this.settings.voiceSelection;
+                }
+            };
+
+            if (window.speechSynthesis.getVoices().length > 0) {
+                populateVoices();
+            } else {
+                window.speechSynthesis.onvoiceschanged = populateVoices;
+            }
+        }
+
+        bindEvents() {
+            this.elements.saveBtn.addEventListener('click', () => this.saveSettings());
+
+            const trackChange = () => {
+                this.hasChanges = true;
+                this.elements.saveBtn.textContent = 'Save Changes*';
+            };
+
+            document.querySelectorAll('select, input').forEach(el => {
+                el.addEventListener('change', trackChange);
+            });
+
+            this.elements.ttsProvider.addEventListener('change', () => {
+                this.updateProviderSettings();
+            });
+        }
+
+        updateProviderSettings() {
+            const provider = this.elements.ttsProvider.value;
+
+            this.elements.elevenLabsSettings.style.display =
+                provider === 'elevenlabs' ? 'block' : 'none';
+            this.elements.openAiTtsSettings.style.display =
+                provider === 'openai' ? 'block' : 'none';
+        }
+
+        async saveSettings() {
+            this.settings = {
+                primary_member_id: this.elements.primaryMemberSelect.value,
+                primaryModel: this.elements.primaryModel.value,
+                visionModel: this.elements.visionModel.value,
+                embeddingModel: this.elements.embeddingModel.value,
+                ttsProvider: this.elements.ttsProvider.value,
+                voiceSelection: this.elements.voiceSelection.value,
+                speechRate: this.elements.speechRate.value,
+                theme: document.querySelector('.theme-option.selected')?.dataset.theme || 'light',
+                localProcessing: this.elements.localProcessing.checked,
+                saveChatHistory: this.elements.saveChatHistory.checked,
+                auditLogging: this.elements.auditLogging.checked,
+                elevenLabsKey: this.elements.elevenLabsKey.value,
+                openAiKey: this.elements.openAiKey.value,
+            };
+
+            localStorage.setItem('myaViewSettings', JSON.stringify(this.settings));
+
+            try {
+                const serverSettings = { ...this.settings };
+                delete serverSettings.elevenLabsKey;
+                delete serverSettings.openAiKey;
+
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(serverSettings),
+                });
+            } catch (e) {
+                console.log('Could not save to server');
+            }
+
+            this.hasChanges = false;
+            this.elements.saveBtn.textContent = 'Save Changes';
+            this.showToast('Settings saved!');
+            this.applyTheme();
+        }
+
+        applyTheme() {
+            // Only use dark if explicitly set to dark, otherwise light
+            const theme = (this.settings.theme === 'dark') ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        formatSize(bytes) {
+            if (!bytes) return 'Unknown';
+            const gb = bytes / (1024 * 1024 * 1024);
+            return `${gb.toFixed(1)}GB`;
+        }
+
+        showToast(message, isError = false) {
+            this.elements.toast.textContent = message;
+            this.elements.toast.classList.toggle('error', isError);
+            this.elements.toast.classList.add('show');
+
+            setTimeout(() => {
+                this.elements.toast.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    function selectTheme(theme) {
+        document.querySelectorAll('.theme-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.theme === theme);
+        });
+        document.documentElement.setAttribute('data-theme', theme);
+        window.settingsManager.hasChanges = true;
+        window.settingsManager.elements.saveBtn.textContent = 'Save Changes*';
+    }
+
+    function toggleApiKeyVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function previewVoice() {
+        const text = "Hello! I'm here to help you with your health questions.";
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        const voiceIndex = document.getElementById('voiceSelection').value;
+        if (voiceIndex !== 'default') {
+            const voices = window.speechSynthesis.getVoices();
+            utterance.voice = voices[parseInt(voiceIndex)];
+        }
+
+        utterance.rate = parseFloat(document.getElementById('speechRate').value);
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.settingsManager = new SettingsManager();
+    });
+    </script>
+</body>
+</html>

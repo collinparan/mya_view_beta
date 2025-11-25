@@ -1,0 +1,111 @@
+version: "3.9"
+
+services:
+  # =============================================================================
+  # FastAPI Backend
+  # =============================================================================
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: mya-view-api
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - NEO4J_HOST=neo4j
+      - NEO4J_BOLT_PORT=7687  # Internal docker port (external is 7688)
+      - NEO4J_HTTP_PORT=7474  # Internal docker port (external is 7475)
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    env_file:
+      - ../.env
+    volumes:
+      - ../backend:/app
+      - ../frontend:/app/static
+      - ../data/uploads:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    # For Mac Studio Metal acceleration
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # =============================================================================
+  # PostgreSQL with PGVector
+  # =============================================================================
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mya-view-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mya_view}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-mya_view}
+    volumes:
+      - ../data/postgres:/var/lib/postgresql/data
+      - ./init-scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mya_view}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # Neo4j Graph Database
+  # =============================================================================
+  neo4j:
+    image: neo4j:5-community
+    container_name: mya-view-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/changeme}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_apoc_import_file_use__neo4j__config: "true"
+    volumes:
+      - ../data/neo4j/data:/data
+      - ../data/neo4j/logs:/logs
+      - ../data/neo4j/import:/var/lib/neo4j/import
+      - ./init-scripts/neo4j-init.cypher:/var/lib/neo4j/import/init.cypher
+    ports:
+      - "7475:7474"  # HTTP (mapped to 7475 to avoid conflict)
+      - "7688:7687"  # Bolt (mapped to 7688 to avoid conflict)
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # =============================================================================
+  # Redis (Optional - for caching)
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: mya-view-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  default:
+    name: mya-view-network
