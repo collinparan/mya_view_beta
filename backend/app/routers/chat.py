@@ -88,8 +88,16 @@ async def create_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new chat session."""
+    # Safely convert family_member_id to UUID if valid
+    family_member_uuid = None
+    if session_data.family_member_id and session_data.family_member_id.strip() and session_data.family_member_id != 'demo':
+        try:
+            family_member_uuid = uuid.UUID(session_data.family_member_id)
+        except (ValueError, AttributeError):
+            pass  # Invalid UUID, leave as None
+
     session = ChatSession(
-        family_member_id=uuid.UUID(session_data.family_member_id) if session_data.family_member_id and session_data.family_member_id != 'demo' else None,
+        family_member_id=family_member_uuid,
         title=session_data.title or "New Chat",
         sort_order=0,
     )
